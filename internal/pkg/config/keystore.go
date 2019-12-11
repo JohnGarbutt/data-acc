@@ -12,7 +12,7 @@ type KeystoreConfig struct {
 	CAFile    string
 }
 
-func GetKeystoreConfig(env ReadEnvironemnt) KeystoreConfig {
+func GetKeystoreConfig(env ReadEnvironment) KeystoreConfig {
 	config := KeystoreConfig{
 		CertFile: getString(env, "ETCDCTL_CERT_FILE", ""),
 		KeyFile:  getString(env, "ETCDCTL_KEY_FILE", ""),
@@ -23,7 +23,7 @@ func GetKeystoreConfig(env ReadEnvironemnt) KeystoreConfig {
 		endpointsStr = getString(env, "ETCD_ENDPOINTS", "")
 	}
 	if endpointsStr == "" {
-		log.Fatalf("Must set ETCDCTL_ENDPOINTS environemnt variable, e.g. export ETCDCTL_ENDPOINTS=127.0.0.1:2379")
+		log.Panicf("Must set ETCDCTL_ENDPOINTS environemnt variable, e.g. export ETCDCTL_ENDPOINTS=127.0.0.1:2379")
 	}
 	config.Endpoints = strings.Split(endpointsStr, ",")
 	return config

@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestGetBrickManagerConfig(t *testing.T) {
+func TestGetBrickManagerConfig_Default(t *testing.T) {
 	config := GetBrickManagerConfig(DefaultEnv)
 
 	hostname, _ := os.Hostname()

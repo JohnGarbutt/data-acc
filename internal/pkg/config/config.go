@@ -6,12 +6,12 @@ import (
 	"strconv"
 )
 
-type ReadEnvironemnt interface {
+type ReadEnvironment interface {
 	LookupEnv(key string) (string, bool)
 	Hostname() (string, error)
 }
 
-func getHostname(env ReadEnvironemnt) string {
+func getHostname(env ReadEnvironment) string {
 	hostname, err := env.Hostname()
 	if err != nil {
 		log.Fatal(err)
@@ -19,7 +19,7 @@ func getHostname(env ReadEnvironemnt) string {
 	return hostname
 }
 
-func getUint(env ReadEnvironemnt, key string, defaultVal uint) uint {
+func getUint(env ReadEnvironment, key string, defaultVal uint) uint {
 	val, ok := env.LookupEnv(key)
 	if !ok {
 		return defaultVal
@@ -32,7 +32,7 @@ func getUint(env ReadEnvironemnt, key string, defaultVal uint) uint {
 	return uint(intVal)
 }
 
-func getString(env ReadEnvironemnt, key string, defaultVal string) string {
+func getString(env ReadEnvironment, key string, defaultVal string) string {
 	val, ok := env.LookupEnv(key)
 	if !ok {
 		return defaultVal
@@ -40,7 +40,7 @@ func getString(env ReadEnvironemnt, key string, defaultVal string) string {
 	return val
 }
 
-func getBool(env ReadEnvironemnt, key string, defaultVal bool) bool {
+func getBool(env ReadEnvironment, key string, defaultVal bool) bool {
 	val, ok := env.LookupEnv(key)
 	if !ok {
 		return defaultVal
@@ -65,4 +65,4 @@ func (systemEnv) Hostname() (string, error) {
 	//return "hostname", nil
 }
 
-var DefaultEnv ReadEnvironemnt = systemEnv{}
+var DefaultEnv ReadEnvironment = systemEnv{}

@@ -15,7 +15,7 @@ type BrickManagerConfig struct {
 }
 
 // TODO: need additional validation here
-func GetBrickManagerConfig(env ReadEnvironemnt) BrickManagerConfig {
+func GetBrickManagerConfig(env ReadEnvironment) BrickManagerConfig {
 	config := BrickManagerConfig{
 		datamodel.BrickHostName(getHostname(env)),
 		datamodel.PoolName(getString(env, "DAC_POOL_NAME", "default")),
