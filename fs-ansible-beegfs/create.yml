@@ -4,7 +4,7 @@
   any_errors_fatal: true
   become: yes
   roles:
-    - role: beegfs
+    - role: beegfs_server
       vars:
         beegfs_state: "present"
         beegfs_format_disks: true
