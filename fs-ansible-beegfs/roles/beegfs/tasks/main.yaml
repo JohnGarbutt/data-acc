@@ -1,9 +1,21 @@
 ---
-- include: repo.yaml
+- import_tasks: repo.yaml
+  when: beegfs_install_repo
+
 - include: client-build-ops.yaml
-- include: format-mount.yaml
-- include: create-mgs-mdt.yaml
-- include: create-ost.yaml
-- include: client.yaml
-- include: stop-all.yaml
-- include: unmount.yaml
+  when: beegfs_install_repo
+
+- import_tasks: wipe.yaml
+  when: beegfs_format_disks|bool and beegfs_state == "present"
+
+- import_tasks: format.yaml
+  when: beegfs_format_disks|bool and beegfs_state == "present"
+
+- import_tasks: mount.yaml
+  when: beegfs_state == "present"
+
+- import_tasks: unmount.yaml
+  when: beegfs_state == "absent"
+
+- import_tasks: wipe.yaml
+  when: beegfs_state == "absent"

@@ -1,0 +1,11 @@
+---
+# state is either present or absent
+beegfs_state: "present"
+# option to format disks, should fail if disk is in use
+beegfs_format_disks: true
+# option to install beegfs repo, mostly assume its already installed
+beegfs_install_repo: false
+
+# following are usually overwritten by host vars
+mdts: {}
+osts: {}
