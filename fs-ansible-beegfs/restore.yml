@@ -1,0 +1,10 @@
+---
+- name: Restore BeeGFS filesystem
+  hosts: all
+  any_errors_fatal: true
+  become: yes
+  roles:
+    - role: beegfs
+      vars:
+        beegfs_state: "present"
+        beegfs_format_disks: false

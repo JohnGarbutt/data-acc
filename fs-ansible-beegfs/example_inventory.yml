@@ -1,0 +1,18 @@
+# Note: extracted from ansible_test unittest
+# TODO: consume this file in a unittest
+dacs:
+  children:
+    abcdefgh:
+      hosts:
+        dac1:
+          mgs: sdb # Note: unused by beegfs
+          mdts: {nvme1n1: 0}
+          osts: {nvme1n1: 0}
+        dac2:
+          mdts: {nvme2n1: 1, nvme3n1: 2}
+          osts: {nvme2n1: 1, nvme3n1: 2}
+      vars:
+        fs_name: abcdefgh
+        lnet_suffix: "" # Note: unused by beegfs
+        mdt_size_mb: "20480" # Note: unused by beegfs
+        mgsnode: dac1

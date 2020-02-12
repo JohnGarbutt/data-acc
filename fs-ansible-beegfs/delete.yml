@@ -1,0 +1,9 @@
+---
+- name: Create BeeGFS filesystem (format)
+  hosts: all
+  any_errors_fatal: true
+  become: yes
+  roles:
+    - role: beegfs
+      vars:
+        beegfs_state: "absent"
