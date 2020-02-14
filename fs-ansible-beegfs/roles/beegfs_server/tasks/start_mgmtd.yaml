@@ -1,0 +1,80 @@
+---
+- name: set mgmtd facts
+  set_fact:
+    fs_dir: "/data/{{ fs_name }}/"
+    mgmtd_port: "{{ port_start_mgmtd + host_index * port_step }}"
+    mgmtd_disk:
+
+- name: create template config
+  block:
+    - name: create fs config dir
+      file:
+        path: "{{ fs_config_dir }}"
+        state: directory
+    - name: copy default config
+      shell: "cp /etc/beegfs/*.conf {{ fs_config_dir }}"
+      args:
+        creates: "{{ fs_config_dir }}beegfs-admon.conf"
+
+- name: create mgmtd service
+  block:
+    - name: make mgs dir
+      file:
+        path: "{{ mgs_dir }}"
+        state: directory
+
+    - name: BeeGFS mgmtd
+      command: |
+        /opt/beegfs/sbin/beegfs-setup-mgmtd \
+        -p {{ mgs_dir }} -n \
+        -S {{ fs_name }}-{{ ansible_host }}-{{ mgs_disk }} \
+        -c {{fs_config_dir}}beegfs-mgmtd.conf
+      register: command_result
+      failed_when: "command_result.rc != 0 and ('ERROR: Storage directory is not empty.' not in command_result.stdout)"
+      changed_when: "command_result.rc == 0"
+
+    - name: set mgmtd port
+      lineinfile:
+        path: "{{ fs_config_dir }}beegfs-mgmtd.conf"
+        regexp: '^{{ item }}.*'
+        line: "{{ item }} = {{ mgs_port }}"
+      loop:
+        - "connMgmtdPortTCP"
+        - "connMgmtdPortUDP"
+
+    - name: set mgmtd ip
+      lineinfile:
+        path: "{{ fs_config_dir }}beegfs-mgmtd.conf"
+        regexp: '^{{ item }}.*'
+        line: "{{ item }} = {{ mgs_ip }}"
+      loop:
+        - "sysMgmtdHost"
+
+    - name: set mgmtd logfile
+      lineinfile:
+        path: "{{ fs_config_dir }}beegfs-mgmtd.conf"
+        regexp: '^{{ item }}.*'
+        line: "{{ item }} = /var/log/{{ fs_name }}-beegfs-mgmtd.log"
+      loop:
+        - "logStdFile"
+
+    - name: write out interfaces file
+      copy:
+        content: "{{ mgs_disk_info['if'] }}"
+        dest: "{{ fs_config_dir }}connInterfacesFile{{ mgs_disk_info['if'] }}"
+
+    - name: set conInterfacesFile in config
+      lineinfile:
+        path: "{{ fs_config_dir }}beegfs-mgmtd.conf"
+        regexp: '^{{ item }}.*'
+        line: "{{ item }} = {{ fs_config_dir }}connInterfacesFile{{ mgs_disk_info['if'] }}"
+      loop:
+        - "connInterfacesFile"
+
+    - name: Start mgmtd
+      systemd:
+        state: started
+        name: "beegfs-mgmtd@{{ fs_name }}.service"
+
+  when:
+    - mgs is defined

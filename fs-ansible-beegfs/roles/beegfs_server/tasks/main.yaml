@@ -11,10 +11,16 @@
 - import_tasks: format.yaml
   when: beegfs_format_disks|bool and beegfs_state == "present"
 
-- import_tasks: mount.yaml
+- import_tasks: start_mgmtd.yaml
   when: beegfs_state == "present"
 
-- import_tasks: unmount.yaml
+- import_tasks: start_meta.yaml
+  when: beegfs_state == "present"
+
+- import_tasks: start_storage.yaml
+  when: beegfs_state == "present"
+
+- import_tasks: stop_all.yaml
   when: beegfs_state == "absent"
 
 - import_tasks: wipe.yaml

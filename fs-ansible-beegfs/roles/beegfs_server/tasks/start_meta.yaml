@@ -1,0 +1,68 @@
+---
+- name: create meta service
+  block:
+    - set_fact:
+        mdt_dir: "/data/{{ fs_name }}/{{ mdt }}/mdt"
+        mdt_disk_info: "{{ beegfs_host_info[mdt] }}"
+    - set_fact:
+        mdt_port: "{{ mdt_disk_info['mdt_port'] }}"
+        mdt_index: 1
+        mdt_ip: hostvars[inventory_hostname]['ansible_{{ mdt_disk_info["if"] }}']['ipv4']['address']
+
+    - name: Configure BeeGFS meta
+      command: |
+        /opt/beegfs/sbin/beegfs-setup-meta \
+        -p {{ mdt_dir }} \
+        -s {{ mdt_index }} \
+        -m {{ mgs_ip }} \
+        -S {{ fs_name }}-{{ ansible_host }}-{{ mdt }} \
+        -c {{fs_config_dir}}beegfs-meta.conf
+      register: command_result
+      failed_when: "command_result.rc != 0 and ('ERROR: Storage directory is not empty.' not in command_result.stdout)"
+      changed_when: "command_result.rc == 0"
+
+    - name: set meta port
+      lineinfile:
+        path: "{{ fs_config_dir }}beegfs-meta.conf"
+        regexp: '^{{ item }}.*'
+        line: "{{ item }} = {{ mdt_port }}"
+      loop:
+        - "connMetaPortTCP"
+        - "connMetaPortUDP"
+
+    - name: set mgmtd port for meta
+      lineinfile:
+        path: "{{ fs_config_dir }}beegfs-meta.conf"
+        regexp: '^{{ item }}.*'
+        line: "{{ item }} = {{ mgs_port }}"
+      loop:
+        - "connMgmtdPortTCP"
+        - "connMgmtdPortUDP"
+
+    - name: set mgmtd logfile
+      lineinfile:
+        path: "{{ fs_config_dir }}beegfs-meta.conf"
+        regexp: '^{{ item }}.*'
+        line: "{{ item }} = /var/log/{{ fs_name }}-beegfs-meta.log"
+      loop:
+        - "logStdFile"
+
+    - name: write out interfaces file
+      copy:
+        content: "{{ mdt_disk_info['if'] }}"
+        dest: "{{ fs_config_dir }}connInterfacesFile{{ mdt_disk_info['if'] }}"
+
+    - name: set conInterfacesFile in config
+      lineinfile:
+        path: "{{ fs_config_dir }}beegfs-meta.conf"
+        regexp: '^{{ item }}.*'
+        line: "{{ item }} = {{ fs_config_dir }}connInterfacesFile{{ mdt_disk_info['if'] }}"
+      loop:
+        - "connInterfacesFile"
+
+    - name: Start services meta
+      systemd:
+        state: started
+        name: "beegfs-meta@{{ fs_name }}.service"
+  when:
+    - mdt is defined

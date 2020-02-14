@@ -1,0 +1,37 @@
+---
+- name: Partition disk
+  parted:
+    device: "/dev/{{ item }}"
+    number: 1
+    part_start: "0%"
+    part_end: "100%"
+    label: gpt
+    state: present
+  loop: "{{ (mdts.keys() + osts.keys()) | unique }}"
+
+- name: Wait for partition to appear in /dev
+  wait_for:
+    path: "/dev/{{ item }}p1"
+    timeout: 30
+    sleep: 2
+  loop: "{{ (mdts.keys() + osts.keys()) | unique }}"
+
+- name: Format disks
+  command: "mkfs.ext4 -E lazy_itable_init=0,lazy_journal_init=0,discard -b 4096 -i 8192 -I 512 -Odir_index,filetype,^has_journal /dev/{{ item }}p1"
+  loop: "{{ (mdts.keys() + osts.keys()) | unique }}"
+
+- name: Setup disks
+  block:
+    - name: Create mount point dir
+      file:
+        path: /data/{{ fs_name }}/{{ item }}
+        state: directory
+        recurse: yes
+      loop: "{{ (mdts.keys() + osts.keys()) | unique }}"
+
+    - name: Mount EXT4 OSTs
+      command: mount -onoatime,nodiratime,nobarrier,user_xattr,discard /dev/{{ item }}p1 /data/{{ fs_name }}/{{ item }}
+      register: mount_command_result
+      failed_when: "mount_command_result.rc != 0 and ('is already mounted' not in mount_command_result.stderr)"
+      changed_when: "mount_command_result.rc == 0"
+      loop: "{{ (mdts.keys() + osts.keys()) | unique }}"

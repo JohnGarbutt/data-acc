@@ -5,14 +5,23 @@ dacs:
     abcdefgh:
       hosts:
         dac1:
-          mgs: sdb # Note: unused by beegfs
+          host_index: 0
+          mgs: nvme1n1 # TODO: lustre uses single mgs per host, beegfs we have mgs per fs
           mdts: {nvme1n1: 0}
           osts: {nvme1n1: 0}
         dac2:
+          host_index: 1
           mdts: {nvme2n1: 1, nvme3n1: 2}
           osts: {nvme2n1: 1, nvme3n1: 2}
+
       vars:
         fs_name: abcdefgh
         lnet_suffix: "" # Note: unused by beegfs
         mdt_size_mb: "20480" # Note: unused by beegfs
         mgsnode: dac1
+        # TODO: fixed group_vars?
+        interfaces: {nvme1n1: "eth0", nvme2n1: "eth0", nvme3n1: "eth0"}
+        port_step: 10
+        port_start_mgmtd: 9000
+        port_start_meta: 9001
+        port_start_storage: 90002
