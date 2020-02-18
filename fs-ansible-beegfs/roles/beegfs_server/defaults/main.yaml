@@ -9,5 +9,9 @@ beegfs_install_repo: false
 beegfs_repo_url: "http://www.beegfs.io/release/beegfs_7_1/dists/rhel7/"
 
 # following are usually overwritten by host vars
-mdts: {}
-osts: {}
+# with {0: nvme1n1, 1:nvme3n1} or similar.
+metadata: {}
+storage: {}
+
+# p1 is normal for nvme3n1 style devices
+partition_prefix: "p"

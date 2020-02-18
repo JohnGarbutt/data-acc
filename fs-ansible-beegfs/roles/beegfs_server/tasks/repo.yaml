@@ -9,14 +9,13 @@
 
 - name: install beegfs
   yum:
-    name: "{{ item }}"
+    name:
+      - libibverbs-utils
+      - beegfs-mgmtd
+      - beegfs-meta
+      - beegfs-storage
+      - beegfs-client
+      - beegfs-helperd
+      - beegfs-utils
+      - beegfs-admon
     state: present
-  with_items:
-    - libibverbs-utils
-    - beegfs-mgmtd
-    - beegfs-meta
-    - beegfs-storage
-    - beegfs-client
-    - beegfs-helperd
-    - beegfs-utils
-    - beegfs-admon

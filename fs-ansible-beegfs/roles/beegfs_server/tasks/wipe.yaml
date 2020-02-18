@@ -6,12 +6,12 @@
     device: "/dev/{{ item }}"
     number: 1
     state: absent
-  loop: "{{ (mdts.keys() + osts.keys()) | unique }}"
+  loop: "{{ (metadata.values() + storage.values()) | unique }}"
 
 - name: Wait for partition to disappear from /dev
   wait_for:
-    path: "/dev/{{ item }}p1"
+    path: "/dev/{{ item }}{{ partition_prefix }}1"
     state: absent
     timeout: 120
     sleep: 5
-  loop: "{{ (mdts.keys() + osts.keys()) | unique }}"
+  loop: "{{ (metadata.values() + storage.values()) | unique }}"

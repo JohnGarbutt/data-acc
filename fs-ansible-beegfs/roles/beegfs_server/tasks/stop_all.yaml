@@ -1,0 +1,34 @@
+---
+- name: stop storage service
+  systemd:
+    state: stopped
+    name: "beegfs-storage@{{ fs_name }}-{{ item }}.service"
+  loop: "{{ storage.values() }}"
+
+- name: stop meta service
+  systemd:
+    state: stopped
+    name: "beegfs-meta@{{ fs_name }}-{{ item }}.service"
+  loop: "{{ metadata.values() }}"
+
+- name: stop mgmtd service
+  systemd:
+    state: stopped
+    name: "beegfs-mgmtd@{{ fs_name }}.service"
+
+- name: get all disks
+  set_fact:
+    all_disks: "{{ (metadata.values() + storage.values()) | unique }}"
+    fs_dir: "/data/{{ fs_name }}/"
+
+- name: Unmount server filesystems
+  command: umount /data/{{ fs_name }}/{{ item }}
+  register: command_result
+  failed_when: "command_result.rc != 0 and ('not mounted' not in command_result.stderr) and ('mountpoint not found' not in command_result.stderr)"
+  changed_when: "command_result.rc == 0"
+  loop: "{{ all_disks }}"
+
+- name: Delete mount point dir
+  file:
+    path: /data/{{ fs_name }}
+    state: absent
