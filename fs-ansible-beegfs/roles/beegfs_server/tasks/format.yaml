@@ -1,4 +1,9 @@
 ---
+- name: get all disks
+  set_fact:
+    all_disks: "{{ (mdts.keys() + osts.keys()) | unique }}"
+    fs_dir: "/data/{{ fs_name }}/"
+
 - name: Partition disk
   parted:
     device: "/dev/{{ item }}"
@@ -7,18 +12,18 @@
     part_end: "100%"
     label: gpt
     state: present
-  loop: "{{ (mdts.keys() + osts.keys()) | unique }}"
+  loop: "{{ all_disks }}"
 
 - name: Wait for partition to appear in /dev
   wait_for:
     path: "/dev/{{ item }}p1"
     timeout: 30
     sleep: 2
-  loop: "{{ (mdts.keys() + osts.keys()) | unique }}"
+  loop: "{{ all_disks }}"
 
 - name: Format disks
   command: "mkfs.ext4 -E lazy_itable_init=0,lazy_journal_init=0,discard -b 4096 -i 8192 -I 512 -Odir_index,filetype,^has_journal /dev/{{ item }}p1"
-  loop: "{{ (mdts.keys() + osts.keys()) | unique }}"
+  loop: "{{ all_disks }}"
 
 - name: Setup disks
   block:
@@ -27,11 +32,25 @@
         path: /data/{{ fs_name }}/{{ item }}
         state: directory
         recurse: yes
-      loop: "{{ (mdts.keys() + osts.keys()) | unique }}"
+      loop: "{{ all_disks }}"
 
     - name: Mount EXT4 OSTs
       command: mount -onoatime,nodiratime,nobarrier,user_xattr,discard /dev/{{ item }}p1 /data/{{ fs_name }}/{{ item }}
       register: mount_command_result
       failed_when: "mount_command_result.rc != 0 and ('is already mounted' not in mount_command_result.stderr)"
       changed_when: "mount_command_result.rc == 0"
-      loop: "{{ (mdts.keys() + osts.keys()) | unique }}"
+      loop: "{{ all_disks }}"
+      
+- set_fact:
+    fs_config_dir: "/etc/beegfs/{{ fs_name }}.d/"
+
+- name: create template config
+  block:
+    - name: create fs config dir
+      file:
+        path: "{{ fs_config_dir }}"
+        state: directory
+    - name: copy default config
+      shell: "cp /etc/beegfs/*.conf {{ fs_config_dir }}"
+      args:
+        creates: "{{ fs_config_dir }}beegfs-admon.conf"

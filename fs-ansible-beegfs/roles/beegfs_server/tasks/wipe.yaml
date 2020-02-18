@@ -1,8 +1,4 @@
 ---
-- set_fact:
-    mdts: "{{ mdts | default({}) }}"
-    osts: "{{ osts | default({}) }}"
-
 # TODO: maybe call wipefs or ss out the block device headers
 
 - name: Remove old Partition

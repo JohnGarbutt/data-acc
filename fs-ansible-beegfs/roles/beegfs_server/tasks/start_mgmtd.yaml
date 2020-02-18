@@ -1,9 +1,15 @@
 ---
-- name: set mgmtd facts
-  set_fact:
-    fs_dir: "/data/{{ fs_name }}/"
-    mgmtd_port: "{{ port_start_mgmtd + host_index * port_step }}"
-    mgmtd_disk:
+# Note: this is only run when ansible_hostname == mgsnode
+- set_fact:
+    fs_config_dir: "/etc/beegfs/{{ fs_name }}.d/"
+    mgmtd_port: "{{ port_start_mgmtd + port_host_multiple * port_step }}"
+    mgs_disk: metadata[0]
+- set_fact:
+    mgs_dir: "/data/{{ fs_name }}/{{ mgs_disk }}/mgs"
+    mgs_interface: "{{ interfaces[mgs_disk] }}"
+    mgs_port: "{{ port_start_mgmtd + port_step * port_multiple[mgs_disk] }}"
+- set_fact:
+    mgs_ip: "{{ hostvars[mgsnode][mgs_interface]['ipv4']['address'] }}"
 
 - name: create template config
   block:
@@ -23,6 +29,7 @@
         path: "{{ mgs_dir }}"
         state: directory
 
+    # TODO: template out file instead?
     - name: BeeGFS mgmtd
       command: |
         /opt/beegfs/sbin/beegfs-setup-mgmtd \
@@ -60,14 +67,14 @@
 
     - name: write out interfaces file
       copy:
-        content: "{{ mgs_disk_info['if'] }}"
-        dest: "{{ fs_config_dir }}connInterfacesFile{{ mgs_disk_info['if'] }}"
+        content: "{{ mgs_interface }}"
+        dest: "{{ fs_config_dir }}connInterfacesFile{{ mgs_interface }}"
 
     - name: set conInterfacesFile in config
       lineinfile:
         path: "{{ fs_config_dir }}beegfs-mgmtd.conf"
         regexp: '^{{ item }}.*'
-        line: "{{ item }} = {{ fs_config_dir }}connInterfacesFile{{ mgs_disk_info['if'] }}"
+        line: "{{ item }} = {{ fs_config_dir }}connInterfacesFile{{ mgs_interface }}"
       loop:
         - "connInterfacesFile"
 

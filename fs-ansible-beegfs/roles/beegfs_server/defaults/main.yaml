@@ -6,6 +6,8 @@ beegfs_format_disks: true
 # option to install beegfs repo, mostly assume its already installed
 beegfs_install_repo: false
 
+beegfs_repo_url: "http://www.beegfs.io/release/beegfs_7_1/dists/rhel7/"
+
 # following are usually overwritten by host vars
 mdts: {}
 osts: {}

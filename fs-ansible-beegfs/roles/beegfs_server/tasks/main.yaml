@@ -2,9 +2,6 @@
 - import_tasks: repo.yaml
   when: beegfs_install_repo
 
-- include: client-build-ops.yaml
-  when: beegfs_install_repo
-
 - import_tasks: wipe.yaml
   when: beegfs_format_disks|bool and beegfs_state == "present"
 
@@ -12,7 +9,7 @@
   when: beegfs_format_disks|bool and beegfs_state == "present"
 
 - import_tasks: start_mgmtd.yaml
-  when: beegfs_state == "present"
+  when: beegfs_state == "present" and ansible_hostname == mgsnode
 
 - import_tasks: start_meta.yaml
   when: beegfs_state == "present"

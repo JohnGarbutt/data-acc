@@ -4,9 +4,8 @@
     name: BeeGFS7
     description: "BeeGFS 7"
     file: beegfs-repo
-    baseurl: http://www.beegfs.io/release/beegfs_7/dists/rhel7
+    baseurl: "{{ beegfs_repo_url }}"
     gpgcheck: no
-  tags: ['never', 'create_mgs', 'create_mdt']
 
 - name: install beegfs
   yum:
@@ -21,5 +20,3 @@
     - beegfs-helperd
     - beegfs-utils
     - beegfs-admon
-    - beeond
-  tags: ['never', 'create_mgs', 'create_mdt']
