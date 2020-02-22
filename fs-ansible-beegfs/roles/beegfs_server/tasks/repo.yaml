@@ -7,6 +7,12 @@
     baseurl: "{{ beegfs_repo_url }}"
     gpgcheck: no
 
+- name: remove classic beegfs client
+  yum:
+    name:
+      - beegfs-client
+  state: absent
+
 - name: install beegfs
   yum:
     name:
@@ -14,7 +20,7 @@
       - beegfs-mgmtd
       - beegfs-meta
       - beegfs-storage
-      - beegfs-client
+      - beegfs-client-dkms
       - beegfs-helperd
       - beegfs-utils
       - beegfs-admon
