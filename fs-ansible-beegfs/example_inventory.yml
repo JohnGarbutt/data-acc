@@ -7,12 +7,12 @@ dacs:
         dac1:
           port_host_multiple: 0
           #TODO: beegfs ignores this... mgs: nvme1n1
-          metadata: {0: "nvme1n1"}
-          storage: {0: "nvme1n1"}
+          metadata: {0: "vdc"}
+          storage: {0: "vdc"}
         dac2:
           port_host_multiple: 1
-          metadata: {1: "nvme2n1", 2: "nvme3n1"}
-          storage: {1: "nvme2n1", 2: "nvme3n1"}
+          metadata: {1: "vdc", 2: "vdd"}
+          storage: {1: "vdc", 2: "vdd"}
 
       vars:
         fs_name: abcdefgh
@@ -21,9 +21,12 @@ dacs:
         mgsnode: dac1
         # TODO: fixed group_vars?
         interfaces: {nvme1n1: "eth0", nvme2n1: "eth0", nvme3n1: "eth0"}
+        interfaces: {vdc: "eth0", vdd: "eth0"}
         port_multiple: {nvme1n1: 0, nvme2n1: 1, nvme3n1: 2, nvme4n1: 3}
+        port_multiple: {vdc: 0, vdd: 1}
         port_step: 10
         port_start_mgmtd: 9000
         port_start_meta: 9001
         port_start_storage: 9002
         port_start_client: 8000 # uses host multiple
+        partition_prefix: ""  # just for cinder volumes vs nvme

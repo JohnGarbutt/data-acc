@@ -8,3 +8,4 @@
       vars:
         beegfs_state: "present"
         beegfs_format_disks: true
+        beegfs_install_repo: false
