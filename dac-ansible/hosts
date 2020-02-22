@@ -1,0 +1,33 @@
+[all:vars]
+ssh_proxy=128.232.226.41
+ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -q centos@128.232.226.41"'
+
+[dac_workers]
+dac1.dac.hpc.cam.ac.uk ansible_host=192.168.0.109 ansible_user=centos
+dac2.dac.hpc.cam.ac.uk ansible_host=192.168.0.105 ansible_user=centos
+dac3.dac.hpc.cam.ac.uk ansible_host=192.168.0.106 ansible_user=centos
+
+[etcd_master]
+dac-etcd.dac.hpc.cam.ac.uk ansible_host=192.168.0.112 ansible_user=centos
+
+[etcd:children]
+etcd_master
+dac_workers
+
+[nfs:children]
+slurm_master
+
+[openstack:children]
+etcd
+slurm
+
+[slurm_master]
+dac-slurm-master.dac.hpc.cam.ac.uk ansible_host=192.168.0.116 ansible_user=centos
+
+[slurm_workers]
+slurm-cpu1.dac.hpc.cam.ac.uk ansible_host=192.168.0.114 ansible_user=centos
+slurm-cpu2.dac.hpc.cam.ac.uk ansible_host=192.168.0.107 ansible_user=centos
+
+[slurm:children]
+slurm_master
+slurm_workers
