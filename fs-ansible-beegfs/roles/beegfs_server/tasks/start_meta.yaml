@@ -64,7 +64,7 @@
       lineinfile:
         path: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
         regexp: '^logStdFile.*'
-        line: "logStdFile = /var/log/beegfs-storage-{{ fs_name }}-{{ item }}.log"
+        line: "logStdFile = /var/log/beegfs-metadata-{{ fs_name }}-{{ item }}.log"
       loop: "{{ metadata.values() }}"
 
     - name: write out interfaces file

@@ -65,7 +65,7 @@
       lineinfile:
         path: "{{ fs_config_dir }}beegfs-mgmtd.conf"
         regexp: '^{{ item }}.*'
-        line: "{{ item }} = /var/log/{{ fs_name }}-beegfs-mgmtd.log"
+        line: "{{ item }} = /var/log/beegfs-mgmtd-{{ fs_name }}.log"
       loop:
         - "logStdFile"
 
