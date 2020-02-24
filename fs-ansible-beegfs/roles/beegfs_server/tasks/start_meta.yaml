@@ -1,19 +1,45 @@
 ---
 - name: create meta service
   block:
+    - name: create metadata config dirs
+      file:
+        path: "/etc/beegfs/{{ item }}.d/"
+        state: directory
+      loop: "{{ metadata.values() }}"
 
-    - name: Configure BeeGFS meta
+    - name: add template metadata conf
+      command: "cp /etc/beegfs/beegfs-meta.conf /etc/beegfs/{{ item }}.d/beegfs-meta.conf"
+      args:
+        creates: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
+      loop: "{{ storage.values() }}"
+
+    - name: make metadata dir
+      file:
+        path: "/data/{{ fs_name }}/{{ item }}/metadata"
+        state: directory
+      loop: "{{ storage.values() }}"
+
+    # TODO: fix up mgsnode bit here! and port below
+
+    - name: setup metadata
       command: |
-        /opt/beegfs/sbin/beegfs-setup-meta \
-        -p {{ mdt_dir }} \
-        -s {{ mdt_index }} \
-        -m {{ mgs_ip }} \
-        -S {{ fs_name }}-{{ ansible_host }}-{{ mdt }} \
-        -c {{fs_config_dir}}beegfs-meta.conf
+          /opt/beegfs/sbin/beegfs-setup-storage \
+          -p /data/{{ fs_name }}/{{ item.value }}/metadata -r \
+          -s {{ item.key }} \
+          -m {{ mgsnode }}
+          -c /etc/beegfs/{{ item.value }}.d/beegfs-meta.conf
+          -S {{ fs_name }}-{{ ansible_host }}-metadata-{{ item.key }}-{{ item.value }}
       register: command_result
-      failed_when: "command_result.rc != 0 and ('ERROR: Storage directory is not empty.' not in command_result.stdout)"
+      failed_when: "command_result.rc != 0 and ('ERROR: Storage target directory is not empty.' not in command_result.stdout)"
       changed_when: "command_result.rc == 0"
-      with_dict: metadata
+      with_dict: "{{ metadata }}"
+
+    - name: set TCP storage port
+      lineinfile:
+        path: "/etc/beegfs/{{ item }}.d/beegfs-metdata.conf"
+        regexp: '^connMetaPortTCP.*'
+        line: "connStoragePortTCP = {{ port_start_meta + port_step*port_multiple[item] }}"
+      loop: "{{ metadata.values() }}"
 
     - name: set meta port
       lineinfile:
@@ -57,6 +83,8 @@
     - name: Start services meta
       systemd:
         state: started
-        name: "beegfs-meta@{{ fs_name }}.service"
+        name: "beegfs-meta@{{ item }}.service"
+      loop: "{{ metadata.values() }}"
+
   when:
     - metadata|length > 0
