@@ -11,10 +11,10 @@
 - import_tasks: start_mgmtd.yaml
   when: beegfs_state == "present" and ansible_hostname == mgsnode
 
-- import_tasks: start_meta.yaml
+- import_tasks: start_storage.yaml
   when: beegfs_state == "present"
 
-- import_tasks: start_storage.yaml
+- import_tasks: start_meta.yaml
   when: beegfs_state == "present"
 
 - import_tasks: stop_all.yaml

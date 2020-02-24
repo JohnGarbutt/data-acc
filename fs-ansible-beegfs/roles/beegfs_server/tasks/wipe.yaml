@@ -1,6 +1,7 @@
 ---
 # TODO: maybe call wipefs or ss out the block device headers
 
+
 - name: Remove old Partition
   parted:
     device: "/dev/{{ item }}"
@@ -14,4 +15,19 @@
     state: absent
     timeout: 120
     sleep: 5
+  loop: "{{ (metadata.values() + storage.values()) | unique }}"
+
+# NOTE: the above will fail if the filesystem is mounted
+# which should stop these more distructive things from happening
+# when then shouldn't
+
+- name: Remove mountpoint dirs
+  file:
+    path: /data/{{ fs_name }}
+    state: absent
+
+- name: Remove storage config dirs
+  file:
+    path: "/etc/beegfs/{{ item }}.d/"
+    state: absent
   loop: "{{ (metadata.values() + storage.values()) | unique }}"

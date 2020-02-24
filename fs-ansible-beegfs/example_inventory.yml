@@ -22,6 +22,7 @@ dacs:
         # TODO: fixed group_vars?
         interfaces: {nvme1n1: "eth0", nvme2n1: "eth0", nvme3n1: "eth0"}
         interfaces: {vdc: "eth0", vdd: "eth0"}
+        numa: {vdc: 0, vdd: 0}
         port_multiple: {nvme1n1: 0, nvme2n1: 1, nvme3n1: 2, nvme4n1: 3}
         port_multiple: {vdc: 0, vdd: 1}
         port_step: 10

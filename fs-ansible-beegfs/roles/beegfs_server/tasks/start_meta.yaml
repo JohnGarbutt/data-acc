@@ -1,13 +1,6 @@
 ---
 - name: create meta service
   block:
-    - set_fact:
-        mdt_dir: "/data/{{ fs_name }}/{{ mdt }}/mdt"
-        mdt_disk_info: "{{ beegfs_host_info[mdt] }}"
-    - set_fact:
-        mdt_port: "{{ mdt_disk_info['mdt_port'] }}"
-        mdt_index: 1
-        mdt_ip: hostvars[inventory_hostname]['ansible_{{ mdt_disk_info["if"] }}']['ipv4']['address']
 
     - name: Configure BeeGFS meta
       command: |
@@ -20,6 +13,7 @@
       register: command_result
       failed_when: "command_result.rc != 0 and ('ERROR: Storage directory is not empty.' not in command_result.stdout)"
       changed_when: "command_result.rc == 0"
+      with_dict: metadata
 
     - name: set meta port
       lineinfile:
@@ -65,4 +59,4 @@
         state: started
         name: "beegfs-meta@{{ fs_name }}.service"
   when:
-    - mdt is defined
+    - metadata|length > 0

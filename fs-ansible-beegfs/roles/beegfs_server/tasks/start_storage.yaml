@@ -1,1 +1,99 @@
 ---
+- name: setup storage osts
+  block:
+    - name: create storage config dirs
+      file:
+        path: "/etc/beegfs/{{ item }}.d/"
+        state: directory
+      loop: "{{ storage.values() }}"
+
+    - name: add template storage conf
+      command: "cp /etc/beegfs/beegfs-storage.conf /etc/beegfs/{{ item }}.d/beegfs-storage.conf"
+      args:
+        creates: "/etc/beegfs/{{ item }}.d/beegfs-storage.conf"
+      loop: "{{ storage.values() }}"
+
+    - name: make data dir
+      file:
+        path: "/data/{{ fs_name }}/{{ item }}/storage"
+        state: directory
+      loop: "{{ storage.values() }}"
+
+    # TODO: fix up mgsnode bit here! and port below
+
+    - name: setup target
+      command: |
+          /opt/beegfs/sbin/beegfs-setup-storage \
+          -p /data/{{ fs_name }}/{{ item.value }}/storage -r \
+          -i {{ item.key }} \
+          -s {{ item.key }} \
+          -m {{ mgsnode }}
+          -c /etc/beegfs/{{ item.value }}.d/beegfs-storage.conf
+          -I {{ fs_name }}-{{ ansible_host }}-{{ item.key }}-{{ item.value }}
+          -S {{ fs_name }}-{{ ansible_host }}-{{ item.key }}-{{ item.value }}
+      register: command_result
+      failed_when: "command_result.rc != 0 and ('ERROR: Storage target directory is not empty.' not in command_result.stdout)"
+      changed_when: "command_result.rc == 0"
+      with_dict: "{{ storage }}"
+
+    - name: set TCP storage port
+      lineinfile:
+        path: "/etc/beegfs/{{ item }}.d/beegfs-storage.conf"
+        regexp: '^connStoragePortTCP.*'
+        line: "connStoragePortTCP = {{ port_start_storage + port_step*port_multiple[item] }}"
+      loop: "{{ storage.values() }}"
+    - name: set UDP storage port
+      lineinfile:
+        path: "/etc/beegfs/{{ item }}.d/beegfs-storage.conf"
+        regexp: '^connStoragePortUDP.*'
+        line: "connStoragePortUDP = {{ port_start_storage + port_step*port_multiple[item] }}"
+      loop: "{{ storage.values() }}"
+
+    - name: set mgmtd tcp port for storage
+      lineinfile:
+        path: "/etc/beegfs/{{ item }}.d/beegfs-storage.conf"
+        regexp: '^connMgmtdPortTCP.*'
+        line: "connMgmtdPortTCP = {{ port_start_mgmtd }}"
+      loop: "{{ storage.values() }}"
+    - name: set mgmtd udp port for storage
+      lineinfile:
+        path: "/etc/beegfs/{{ item }}.d/beegfs-storage.conf"
+        regexp: '^connMgmtdPortUDP.*'
+        line: "connMgmtdPortUDP = {{ port_start_mgmtd }}"
+      loop: "{{ storage.values() }}"
+
+    - name: set storage log
+      lineinfile:
+        path: "/etc/beegfs/{{ item }}.d/beegfs-storage.conf"
+        regexp: '^logStdFile.*'
+        line: "logStdFile = /var/log/beegfs-storage-{{ fs_name }}-{{ item }}.log"
+      loop: "{{ storage.values() }}"
+
+    - name: write out interfaces file
+      copy:
+        content: "{{ interfaces[item] }}"
+        dest: "/etc/beegfs/{{ item }}.d/connInterfacesFile"
+      loop: "{{ storage.values() }}"
+
+    - name: set conInterfacesFile in config
+      lineinfile:
+        path: "/etc/beegfs/{{ item }}.d/beegfs-storage.conf"
+        regexp: '^connInterfacesFile.*'
+        line: "connInterfacesFile = /etc/beegfs/{{ item }}.d/connInterfacesFile"
+      loop: "{{ storage.values() }}"
+
+    - name: Set appropriate tuneBindToNumaZone
+      lineinfile:
+        path: "/etc/beegfs/{{ item }}.d/beegfs-storage.conf"
+        regexp: "^tuneBindToNumaZone.*"
+        line: "tuneBindToNumaZone={{ numa[item] }}"
+      loop: "{{ storage.values() }}"
+
+    - name: Start Services storage
+      systemd:
+        state: started
+        name: "beegfs-storage@{{ item }}.service"
+      loop: "{{ storage.values() }}"
+
+  when:
+    - storage|length > 0
