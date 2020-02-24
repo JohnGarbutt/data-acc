@@ -25,7 +25,7 @@
       command: |
           /opt/beegfs/sbin/beegfs-setup-meta \
           -p /data/{{ fs_name }}/{{ item.value }}/metadata \
-          -s {{ item.key }} \
+          -s {{ item.key|int + 1 }} \
           -m {{ mgsnode }}
           -c /etc/beegfs/{{ item.value }}.d/beegfs-meta.conf
           -S {{ fs_name }}-{{ ansible_host }}-metadata-{{ item.key }}-{{ item.value }}

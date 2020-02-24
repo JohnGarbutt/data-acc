@@ -25,8 +25,8 @@
       command: |
           /opt/beegfs/sbin/beegfs-setup-storage \
           -p /data/{{ fs_name }}/{{ item.value }}/storage -r \
-          -i {{ item.key }} \
-          -s {{ item.key }} \
+          -i {{ item.key|int + 1 }} \
+          -s {{ item.key|int + 1 }} \
           -m {{ mgsnode }}
           -c /etc/beegfs/{{ item.value }}.d/beegfs-storage.conf
           -I {{ fs_name }}-{{ ansible_host }}-storage-{{ item.key }}-{{ item.value }}
