@@ -11,26 +11,26 @@
       command: "cp /etc/beegfs/beegfs-meta.conf /etc/beegfs/{{ item }}.d/beegfs-meta.conf"
       args:
         creates: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
-      loop: "{{ storage.values() }}"
+      loop: "{{ metadata.values() }}"
 
     - name: make metadata dir
       file:
         path: "/data/{{ fs_name }}/{{ item }}/metadata"
         state: directory
-      loop: "{{ storage.values() }}"
+      loop: "{{ metadata.values() }}"
 
     # TODO: fix up mgsnode bit here! and port below
 
     - name: setup metadata
       command: |
-          /opt/beegfs/sbin/beegfs-setup-storage \
-          -p /data/{{ fs_name }}/{{ item.value }}/metadata -r \
+          /opt/beegfs/sbin/beegfs-setup-meta \
+          -p /data/{{ fs_name }}/{{ item.value }}/metadata \
           -s {{ item.key }} \
           -m {{ mgsnode }}
           -c /etc/beegfs/{{ item.value }}.d/beegfs-meta.conf
           -S {{ fs_name }}-{{ ansible_host }}-metadata-{{ item.key }}-{{ item.value }}
       register: command_result
-      failed_when: "command_result.rc != 0 and ('ERROR: Storage target directory is not empty.' not in command_result.stdout)"
+      failed_when: "command_result.rc != 0 and ('ERROR: Storage directory is not empty.' not in command_result.stdout)"
       changed_when: "command_result.rc == 0"
       with_dict: "{{ metadata }}"
 
@@ -38,13 +38,13 @@
       lineinfile:
         path: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
         regexp: '^connMetaPortTCP.*'
-        line: "connStoragePortTCP = {{ port_start_meta + port_step*port_multiple[item] }}"
+        line: "connMetaPortTCP = {{ port_start_meta + port_step*port_multiple[item] }}"
       loop: "{{ metadata.values() }}"
     - name: set UDP meta port
       lineinfile:
         path: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
         regexp: '^connMetaPortUDP.*'
-        line: "connStoragePortTCP = {{ port_start_meta + port_step*port_multiple[item] }}"
+        line: "connMetaPortUDP = {{ port_start_meta + port_step*port_multiple[item] }}"
       loop: "{{ metadata.values() }}"
 
     - name: set mgmtd port for meta
