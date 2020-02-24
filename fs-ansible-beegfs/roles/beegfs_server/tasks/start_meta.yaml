@@ -34,51 +34,58 @@
       changed_when: "command_result.rc == 0"
       with_dict: "{{ metadata }}"
 
-    - name: set TCP storage port
+    - name: set TCP meta port
       lineinfile:
-        path: "/etc/beegfs/{{ item }}.d/beegfs-metdata.conf"
+        path: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
         regexp: '^connMetaPortTCP.*'
         line: "connStoragePortTCP = {{ port_start_meta + port_step*port_multiple[item] }}"
       loop: "{{ metadata.values() }}"
-
-    - name: set meta port
+    - name: set UDP meta port
       lineinfile:
-        path: "{{ fs_config_dir }}beegfs-meta.conf"
-        regexp: '^{{ item }}.*'
-        line: "{{ item }} = {{ mdt_port }}"
-      loop:
-        - "connMetaPortTCP"
-        - "connMetaPortUDP"
+        path: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
+        regexp: '^connMetaPortUDP.*'
+        line: "connStoragePortTCP = {{ port_start_meta + port_step*port_multiple[item] }}"
+      loop: "{{ metadata.values() }}"
 
     - name: set mgmtd port for meta
       lineinfile:
-        path: "{{ fs_config_dir }}beegfs-meta.conf"
-        regexp: '^{{ item }}.*'
-        line: "{{ item }} = {{ mgs_port }}"
-      loop:
-        - "connMgmtdPortTCP"
-        - "connMgmtdPortUDP"
-
-    - name: set mgmtd logfile
+        path: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
+        regexp: '^connMgmtdPortTCP.*'
+        line: "connMgmtdPortTCP = {{ port_start_mgmtd }}"
+      loop: "{{ metadata.values() }}"
+    - name: set mgmtd port for meta
       lineinfile:
-        path: "{{ fs_config_dir }}beegfs-meta.conf"
-        regexp: '^{{ item }}.*'
-        line: "{{ item }} = /var/log/{{ fs_name }}-beegfs-meta.log"
-      loop:
-        - "logStdFile"
+        path: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
+        regexp: '^connMgmtdPortUDP.*'
+        line: "connMgmtdPortUDP = {{ port_start_mgmtd }}"
+      loop: "{{ metadata.values() }}"
+
+    - name: set metadata log
+      lineinfile:
+        path: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
+        regexp: '^logStdFile.*'
+        line: "logStdFile = /var/log/beegfs-storage-{{ fs_name }}-{{ item }}.log"
+      loop: "{{ metadata.values() }}"
 
     - name: write out interfaces file
       copy:
-        content: "{{ mdt_disk_info['if'] }}"
-        dest: "{{ fs_config_dir }}connInterfacesFile{{ mdt_disk_info['if'] }}"
+        content: "{{ interfaces[item] }}"
+        dest: "/etc/beegfs/{{ item }}.d/connInterfacesFile"
+      loop: "{{ metadata.values() }}"
 
     - name: set conInterfacesFile in config
       lineinfile:
-        path: "{{ fs_config_dir }}beegfs-meta.conf"
-        regexp: '^{{ item }}.*'
-        line: "{{ item }} = {{ fs_config_dir }}connInterfacesFile{{ mdt_disk_info['if'] }}"
-      loop:
-        - "connInterfacesFile"
+        path: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
+        regexp: '^connInterfacesFile.*'
+        line: "connInterfacesFile = /etc/beegfs/{{ item }}.d/connInterfacesFile"
+      loop: "{{ metadata.values() }}"
+
+    - name: Set appropriate tuneBindToNumaZone
+      lineinfile:
+        path: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
+        regexp: "^tuneBindToNumaZone.*"
+        line: "tuneBindToNumaZone={{ numa[item] }}"
+      loop: "{{ metadata.values() }}"
 
     - name: Start services meta
       systemd:

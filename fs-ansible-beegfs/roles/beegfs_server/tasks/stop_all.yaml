@@ -2,13 +2,13 @@
 - name: stop storage service
   systemd:
     state: stopped
-    name: "beegfs-storage@{{ fs_name }}-{{ item }}.service"
+    name: "beegfs-storage@{{ item }}.service"
   loop: "{{ storage.values() }}"
 
 - name: stop meta service
   systemd:
     state: stopped
-    name: "beegfs-meta@{{ fs_name }}-{{ item }}.service"
+    name: "beegfs-meta@{{ item }}.service"
   loop: "{{ metadata.values() }}"
 
 - name: stop mgmtd service
