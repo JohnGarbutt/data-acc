@@ -26,7 +26,12 @@
     path: /data/{{ fs_name }}
     state: absent
 
-- name: Remove storage config dirs
+- name: Remove management config dir
+  file:
+    path: "/etc/beegfs/{{ fs_name }}.d"
+    state: absent
+
+- name: Remove config dirs
   file:
     path: "/etc/beegfs/{{ item }}.d/"
     state: absent

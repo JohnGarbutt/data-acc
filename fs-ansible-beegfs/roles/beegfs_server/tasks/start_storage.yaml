@@ -29,8 +29,8 @@
           -s {{ item.key }} \
           -m {{ mgsnode }}
           -c /etc/beegfs/{{ item.value }}.d/beegfs-storage.conf
-          -I {{ fs_name }}-{{ ansible_host }}-{{ item.key }}-{{ item.value }}
-          -S {{ fs_name }}-{{ ansible_host }}-{{ item.key }}-{{ item.value }}
+          -I {{ fs_name }}-{{ ansible_host }}-storage-{{ item.key }}-{{ item.value }}
+          -S {{ fs_name }}-{{ ansible_host }}-storage-{{ item.key }}-{{ item.value }}
       register: command_result
       failed_when: "command_result.rc != 0 and ('ERROR: Storage target directory is not empty.' not in command_result.stdout)"
       changed_when: "command_result.rc == 0"

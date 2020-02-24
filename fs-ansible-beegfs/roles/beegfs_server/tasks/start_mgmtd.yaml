@@ -15,14 +15,17 @@
 
 - name: create template config
   block:
-    - name: create fs config dir
+    - name: create metadata config dirs
       file:
-        path: "{{ fs_config_dir }}"
+        path: "/etc/beegfs/{{ fs_name }}.d/"
         state: directory
-    - name: copy default config
-      shell: "cp /etc/beegfs/*.conf {{ fs_config_dir }}"
+      loop: "{{ metadata.values() }}"
+
+    - name: add template conf
+      command: "cp /etc/beegfs/beegfs-mgmtd.conf /etc/beegfs/{{ fs_name }}.d/beegfs-mgmtd.conf"
       args:
-        creates: "{{ fs_config_dir }}beegfs-admon.conf"
+        creates: "/etc/beegfs/{{ item }}.d/beegfs-meta.conf"
+      loop: "{{ storage.values() }}"
   when: mgs_disk is defined
 
 - name: create mgmtd service
@@ -38,7 +41,7 @@
       command: |
         /opt/beegfs/sbin/beegfs-setup-mgmtd \
         -p {{ mgs_dir }} -n \
-        -S {{ fs_name }}-{{ ansible_host }}-{{ mgs_disk }} \
+        -S {{ fs_name }}-{{ ansible_host }}-mgs-{{ mgs_disk }} \
         -c {{fs_config_dir}}beegfs-mgmtd.conf
       register: command_result
       failed_when: "command_result.rc != 0 and ('ERROR: Storage directory is not empty.' not in command_result.stdout)"
