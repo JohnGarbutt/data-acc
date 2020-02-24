@@ -17,3 +17,8 @@
       - beegfs-client-dkms
       - beegfs-utils
     state: present
+
+- name: Add BeeGFS client module
+  modprobe:
+    name: beegfs
+    state: present
