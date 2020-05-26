@@ -5,12 +5,12 @@ dacs:
     abcdefgh:
       hosts:
         dac1:
-          port_host_multiple: 0
+          server_index: 0
           #TODO: beegfs ignores this... mgs: nvme1n1
           metadata: {0: "vdc"}
           storage: {0: "vdc"}
         dac2:
-          port_host_multiple: 1
+          server_index: 1
           metadata: {1: "vdc", 2: "vdd"}
           storage: {1: "vdc", 2: "vdd"}
 
@@ -22,6 +22,7 @@ dacs:
         # TODO: fixed group_vars?
         interfaces: {nvme1n1: "eth0", nvme2n1: "eth0", nvme3n1: "eth0"}
         interfaces: {vdc: "eth0", vdd: "eth0"}
+        numa: {vdc: 0, vdd: 0}
         port_multiple: {nvme1n1: 0, nvme2n1: 1, nvme3n1: 2, nvme4n1: 3}
         port_multiple: {vdc: 0, vdd: 1}
         port_step: 10
