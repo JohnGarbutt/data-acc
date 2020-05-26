@@ -1,0 +1,5 @@
+---
+- name: Unmount beegfs fs
+  mount:
+    state: absent
+    path: /mnt

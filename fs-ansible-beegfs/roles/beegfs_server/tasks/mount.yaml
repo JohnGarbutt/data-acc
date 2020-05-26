@@ -1,0 +1,36 @@
+---
+- name: create metadata config dirs
+  file:
+    path: "/etc/beegfs/{{ fs_name }}.d/"
+    state: directory
+
+- name: add template conf
+  command: "cp /etc/beegfs/beegfs-client.conf /etc/beegfs/{{ fs_name }}.d/beegfs-client.conf"
+  args:
+    creates: "/etc/beegfs/{{ fs_name }}.d/beegfs-meta.conf"
+
+- name: set mgmtd tcp port
+  lineinfile:
+    path: "/etc/beegfs/{{ fs_name }}.d/beegfs-client.conf"
+    regexp: '^connMgmtdPortTCP.*'
+    line: "connMgmtdPortTCP = {{ port_start_mgmtd }}"
+
+- name: set mgmtd tcp port
+  lineinfile:
+    path: "/etc/beegfs/{{ fs_name }}.d/beegfs-client.conf"
+    regexp: '^connMgmtdPortUDP.*'
+    line: "connMgmtdPortUDP = {{ port_start_mgmtd }}"
+
+- name: set mgmtd tcp port
+  lineinfile:
+    path: "/etc/beegfs/{{ fs_name }}.d/beegfs-client.conf"
+    regexp: '^sysMgmtdHost.*'
+    line: "sysMgmtdHost = {{ mgsnode }}"
+
+- name: Mount beegfs fs
+  mount:
+    state: mounted
+    path: /mnt
+    src: beegfs_nodev
+    fstype: beegfs
+    opts: "rw,relatime,cfgFile=/etc/beegfs/{{ fs_name }}.d/beegfs-client.conf,_netdev"
